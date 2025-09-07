@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { validatePollQuestion, validatePollOptions, validatePollId, validateOptionIndex } from "@/lib/validation";
 
 // CREATE POLL
 export async function createPoll(formData: FormData) {
@@ -10,8 +11,16 @@ export async function createPoll(formData: FormData) {
   const question = formData.get("question") as string;
   const options = formData.getAll("options").filter(Boolean) as string[];
 
-  if (!question || options.length < 2) {
-    return { error: "Please provide a question and at least two options." };
+  // Validate question
+  const questionValidation = validatePollQuestion(question);
+  if (!questionValidation.isValid) {
+    return { error: questionValidation.error };
+  }
+
+  // Validate options
+  const optionsValidation = validatePollOptions(options);
+  if (!optionsValidation.isValid) {
+    return { error: optionsValidation.error };
   }
 
   // Get user from session
@@ -29,8 +38,8 @@ export async function createPoll(formData: FormData) {
   const { error } = await supabase.from("polls").insert([
     {
       user_id: user.id,
-      question,
-      options,
+      question: questionValidation.isValid ? question : "",
+      options: optionsValidation.sanitizedOptions || [],
     },
   ]);
 
@@ -76,12 +85,47 @@ export async function getPollById(id: string) {
 // SUBMIT VOTE
 export async function submitVote(pollId: string, optionIndex: number) {
   const supabase = await createClient();
+  
+  // Validate poll ID
+  const pollIdValidation = validatePollId(pollId);
+  if (!pollIdValidation.isValid) {
+    return { error: pollIdValidation.error };
+  }
+
+  // Get the poll to validate option index
+  const { data: poll, error: pollError } = await supabase
+    .from("polls")
+    .select("options")
+    .eq("id", pollId)
+    .single();
+
+  if (pollError || !poll) {
+    return { error: "Poll not found." };
+  }
+
+  // Validate option index is within bounds
+  const optionIndexValidation = validateOptionIndex(optionIndex, poll.options.length);
+  if (!optionIndexValidation.isValid) {
+    return { error: optionIndexValidation.error };
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Optionally require login to vote
-  // if (!user) return { error: 'You must be logged in to vote.' };
+  // Check for existing vote if user is logged in
+  if (user) {
+    const { data: existingVote } = await supabase
+      .from("votes")
+      .select("id")
+      .eq("poll_id", pollId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingVote) {
+      return { error: "You have already voted on this poll." };
+    }
+  }
 
   const { error } = await supabase.from("votes").insert([
     {
@@ -98,7 +142,28 @@ export async function submitVote(pollId: string, optionIndex: number) {
 // DELETE POLL
 export async function deletePoll(id: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("polls").delete().eq("id", id);
+  
+  // Get user from session
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  
+  if (userError) {
+    return { error: userError.message };
+  }
+  
+  if (!user) {
+    return { error: "You must be logged in to delete a poll." };
+  }
+
+  // Only allow deleting polls owned by the user
+  const { error } = await supabase
+    .from("polls")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id);
+    
   if (error) return { error: error.message };
   revalidatePath("/polls");
   return { error: null };
@@ -111,8 +176,22 @@ export async function updatePoll(pollId: string, formData: FormData) {
   const question = formData.get("question") as string;
   const options = formData.getAll("options").filter(Boolean) as string[];
 
-  if (!question || options.length < 2) {
-    return { error: "Please provide a question and at least two options." };
+  // Validate poll ID
+  const pollIdValidation = validatePollId(pollId);
+  if (!pollIdValidation.isValid) {
+    return { error: pollIdValidation.error };
+  }
+
+  // Validate question
+  const questionValidation = validatePollQuestion(question);
+  if (!questionValidation.isValid) {
+    return { error: questionValidation.error };
+  }
+
+  // Validate options
+  const optionsValidation = validatePollOptions(options);
+  if (!optionsValidation.isValid) {
+    return { error: optionsValidation.error };
   }
 
   // Get user from session
@@ -130,7 +209,10 @@ export async function updatePoll(pollId: string, formData: FormData) {
   // Only allow updating polls owned by the user
   const { error } = await supabase
     .from("polls")
-    .update({ question, options })
+    .update({ 
+      question: questionValidation.isValid ? question : "",
+      options: optionsValidation.sanitizedOptions || []
+    })
     .eq("id", pollId)
     .eq("user_id", user.id);
 

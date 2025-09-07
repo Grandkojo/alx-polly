@@ -24,26 +24,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    const getUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
+    
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
-        console.error('Error fetching user:', error);
+        console.error('Error fetching session:', error);
       }
       if (mounted) {
-        setUser(data.user ?? null);
-        setSession(null);
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
-        console.log('AuthContext: Initial user loaded', data.user);
+        console.log('AuthContext: Initial session loaded', session?.user);
       }
     };
 
-    getUser();
+    getInitialSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      // Do not set loading to false here, only after initial load
-      console.log('AuthContext: Auth state changed', _event, session, session?.user);
+      if (mounted) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        console.log('AuthContext: Auth state changed', _event, session?.user);
+      }
     });
 
     return () => {
