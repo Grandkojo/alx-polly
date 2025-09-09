@@ -1,25 +1,22 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { getPollById } from '@/app/lib/actions/poll-actions';
+import { getPollResults } from '@/app/lib/actions/poll-actions';
 import { notFound } from 'next/navigation';
 import PollVotingForm from './PollVotingForm';
+import { getCurrentUser } from '@/app/lib/actions/auth-actions';
+import PollDeleteButton from './PollDeleteButton';
 
 export default async function PollDetailPage({ params }: { params: { id: string } }) {
-  const { poll, error } = await getPollById(params.id);
+  const { poll, results, userVote, error } = await getPollResults(params.id);
+  const user = await getCurrentUser();
 
-  if (error || !poll) {
+  if (error || !poll || !results) {
     notFound();
   }
 
-  // Get vote counts for each option (this would need to be implemented)
-  const voteCounts = poll.options.map(() => Math.floor(Math.random() * 20)); // Placeholder
-  const totalVotes = voteCounts.reduce((sum, count) => sum + count, 0);
-
-  const getPercentage = (votes: number) => {
-    if (totalVotes === 0) return 0;
-    return Math.round((votes / totalVotes) * 100);
-  };
+  const totalVotes = results.reduce((sum, result) => sum + result.count, 0);
+  const userHasVoted = userVote !== null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -27,26 +24,50 @@ export default async function PollDetailPage({ params }: { params: { id: string 
         <Link href="/polls" className="text-blue-600 hover:underline">
           &larr; Back to Polls
         </Link>
-        <div className="flex space-x-2">
-          <Button variant="outline" asChild>
-            <Link href={`/polls/${params.id}/edit`}>Edit Poll</Link>
-          </Button>
-          <Button variant="outline" className="text-red-500 hover:text-red-700">
-            Delete
-          </Button>
-        </div>
+        {user && user.id === poll.user_id && (
+          <div className="flex space-x-2">
+            <Button variant="outline" asChild>
+              <Link href={`/polls/${params.id}/edit`}>Edit Poll</Link>
+            </Button>
+            <PollDeleteButton pollId={poll.id} />
+          </div>
+        )}
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-2xl">{poll.question}</CardTitle>
-          <CardDescription>Cast your vote below</CardDescription>
+          {!userHasVoted && <CardDescription>Cast your vote below</CardDescription>}
+          {userHasVoted && <CardDescription>You have already voted on this poll.</CardDescription>}
         </CardHeader>
         <CardContent className="space-y-4">
-          <PollVotingForm poll={poll} />
+          {!userHasVoted ? (
+            <PollVotingForm poll={poll} />
+          ) : (
+            <div className="space-y-3">
+              {results.map((result, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex justify-between items-baseline">
+                    <span className={`font-medium ${userVote === index ? 'text-blue-600' : ''}`}>
+                      {result.option}
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      {result.count} votes ({result.percentage.toFixed(1)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div
+                      className="bg-blue-600 h-2.5 rounded-full"
+                      style={{ width: `${result.percentage}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter className="text-sm text-slate-500 flex justify-between">
-          <span>Poll ID: {poll.id}</span>
+          <span>Total Votes: {totalVotes}</span>
           <span>Created on {new Date(poll.created_at).toLocaleDateString()}</span>
         </CardFooter>
       </Card>

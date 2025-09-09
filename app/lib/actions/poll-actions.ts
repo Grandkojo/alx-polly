@@ -203,6 +203,107 @@ export async function getPollById(id: string) {
 }
 
 /**
+ * Retrieves the results of a specific poll, including vote counts and percentages.
+ *
+ * This function provides detailed poll results for public viewing, ensuring data
+ * integrity and preventing information leaks. It calculates vote counts for each
+ * option and determines if the current user has already participated in the poll.
+ *
+ * Security Context:
+ * - No authentication required for public result viewing
+ * - Validates poll ID format to prevent injection attacks
+ * - Aggregates vote data without exposing individual voter information
+ * - Server-side execution prevents client-side data manipulation
+ *
+ * Business Logic:
+ * - Calculates vote counts for each option
+ * - Computes percentage of total votes for each option
+ * - Checks if the current user (if authenticated) has already voted
+ * - Handles polls with no votes gracefully
+ *
+ * Assumptions:
+ * - Poll ID is a valid UUID format
+ * - Database polls and votes tables exist with proper schema
+ * - Supabase client is configured with read permissions
+ *
+ * Edge Cases:
+ * - Invalid poll ID: Returns validation error
+ * - Non-existent poll: Returns "Poll not found" error
+ * - Poll with no votes: Returns zero counts for all options
+ * - Database connection issues: Returns database error
+ *
+ * Integration:
+ * - Called from poll detail pages to display results
+ * - Enables dynamic result visualization components
+ * - Provides data for poll analytics and reporting
+ *
+ * @param pollId - Unique identifier of the poll to retrieve results for
+ * @returns Promise resolving to object containing poll data, results, and error state
+ */
+export async function getPollResults(pollId: string) {
+  const supabase = await createClient();
+
+  // 1. Validate Poll ID
+  const pollIdValidation = validatePollId(pollId);
+  if (!pollIdValidation.isValid) {
+    return { poll: null, results: null, userVote: null, error: pollIdValidation.error };
+  }
+
+  // 2. Fetch Poll Details
+  const { data: poll, error: pollError } = await supabase
+    .from("polls")
+    .select("*")
+    .eq("id", pollId)
+    .single();
+
+  if (pollError || !poll) {
+    return { poll: null, results: null, userVote: null, error: "Poll not found." };
+  }
+
+  // 3. Fetch All Votes for the Poll
+  const { data: votes, error: votesError } = await supabase
+    .from("votes")
+    .select("option_index, user_id")
+    .eq("poll_id", pollId);
+
+  if (votesError) {
+    return { poll: null, results: null, userVote: null, error: votesError.message };
+  }
+
+  // 4. Get Current User
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // 5. Check if the current user has voted
+  let userVote: number | null = null;
+  if (user && votes) {
+    const foundVote = votes.find(v => v.user_id === user.id);
+    if (foundVote) {
+      userVote = foundVote.option_index;
+    }
+  }
+
+  // 6. Calculate Results
+  const voteCounts = poll.options.map(() => 0);
+  if (votes) {
+    for (const vote of votes) {
+      if (vote.option_index >= 0 && vote.option_index < voteCounts.length) {
+        voteCounts[vote.option_index]++;
+      }
+    }
+  }
+
+  const totalVotes = voteCounts.reduce((sum, count) => sum + count, 0);
+
+  const results = poll.options.map((option: string, index: number) => ({
+    option,
+    count: voteCounts[index],
+    percentage: totalVotes > 0 ? (voteCounts[index] / totalVotes) * 100 : 0,
+  }));
+
+  return { poll, results, userVote, error: null };
+}
+
+/**
  * Submits a vote for a specific poll option with comprehensive validation.
  * 
  * This function is the core voting mechanism, handling vote submission with
