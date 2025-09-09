@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { deletePoll } from "@/app/lib/actions/poll-actions";
@@ -59,6 +60,7 @@ import { useState } from "react";
  */
 export default function PollActions({ poll }: PollActionsProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -67,13 +69,18 @@ export default function PollActions({ poll }: PollActionsProps) {
       setIsDeleting(true);
       setError(null);
       
-      const result = await deletePoll(poll.id);
-      
-      if (result?.error) {
-        setError(result.error);
+      try {
+        const result = await deletePoll(poll.id);
+        
+        if (result?.error) {
+          setError(result.error);
+          setIsDeleting(false);
+        } else {
+          router.refresh();
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'An unexpected error occurred');
         setIsDeleting(false);
-      } else {
-        window.location.reload();
       }
     }
   };

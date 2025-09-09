@@ -35,12 +35,25 @@ export function AuthForm({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    // Prevent double-submits
+    if (isSubmitting) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    const formData = new FormData(event.currentTarget);
-    await onSubmit(formData);
-    
-    setIsSubmitting(false);
+    try {
+      const formData = new FormData(event.currentTarget);
+      await onSubmit(formData);
+    } catch (error) {
+      // Let the parent component handle the error
+      // The error will be caught by the parent's error handling
+      throw error;
+    } finally {
+      // Always clear the submitting flag
+      setIsSubmitting(false);
+    }
   };
 
   return (

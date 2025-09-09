@@ -43,7 +43,8 @@ export async function login(data: LoginFormData): Promise<ApiResponse> {
     });
 
     if (error) {
-      return { error: error.message };
+      console.error('Login authentication error:', error);
+      return { error: 'Invalid credentials' };
     }
 
     return { error: null };
@@ -101,7 +102,8 @@ export async function register(data: RegisterFormData): Promise<ApiResponse> {
     });
 
     if (error) {
-      return { error: error.message };
+      console.error('Registration authentication error:', error);
+      return { error: 'Registration failed. Please try again or use the login/password reset flow.' };
     }
 
     return { error: null };
@@ -146,7 +148,8 @@ export async function logout() {
   const supabase = await createClient();
   const { error } = await supabase.auth.signOut();
   if (error) {
-    return { error: error.message };
+    console.error('Logout error:', error);
+    return { error: 'Logout failed' };
   }
   return { error: null };
 }

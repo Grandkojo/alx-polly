@@ -454,6 +454,7 @@ export async function submitVote(pollId: string, optionIndex: number) {
  * @param id - Unique identifier of the poll to delete
  * @returns Promise resolving to error state (null on success, error message on failure)
  */
+"use server";
 export async function deletePoll(id: string) {
   const supabase = await createClient();
   
