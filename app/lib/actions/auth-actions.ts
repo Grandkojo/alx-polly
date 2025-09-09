@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { LoginFormData, RegisterFormData } from '../types';
+import { LoginFormData, RegisterFormData, ApiResponse } from '../types';
 
 /**
  * Authenticates a user with email and password credentials.
@@ -33,20 +33,24 @@ import { LoginFormData, RegisterFormData } from '../types';
  * @param data - Login credentials containing email and password
  * @returns Promise resolving to error state (null on success, error message on failure)
  */
-export async function login(data: LoginFormData) {
-  const supabase = await createClient();
+export async function login(data: LoginFormData): Promise<ApiResponse> {
+  try {
+    const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: data.email,
-    password: data.password,
-  });
+    const { error } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Login error:', error);
+    return { error: 'An unexpected error occurred during login' };
   }
-
-  // Success: no error
-  return { error: null };
 }
 
 /**
@@ -82,25 +86,29 @@ export async function login(data: LoginFormData) {
  * @param data - Registration data containing email, password, and name
  * @returns Promise resolving to error state (null on success, error message on failure)
  */
-export async function register(data: RegisterFormData) {
-  const supabase = await createClient();
+export async function register(data: RegisterFormData): Promise<ApiResponse> {
+  try {
+    const supabase = await createClient();
 
-  const { error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
-    options: {
-      data: {
-        name: data.name,
+    const { error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          name: data.name,
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    return { error: error.message };
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { error: 'An unexpected error occurred during registration' };
   }
-
-  // Success: no error
-  return { error: null };
 }
 
 /**

@@ -5,6 +5,8 @@ import { createPoll } from "@/app/lib/actions/poll-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ErrorDisplay, SuccessDisplay } from "@/app/components/ui/error-display";
+import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
 
 /**
  * Poll creation form component enabling authenticated users to create new polls.
@@ -61,63 +63,120 @@ export default function PollCreateForm() {
   const [options, setOptions] = useState(["", ""]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleOptionChange = (idx: number, value: string) => {
     setOptions((opts) => opts.map((opt, i) => (i === idx ? value : opt)));
   };
 
-  const addOption = () => setOptions((opts) => [...opts, ""]);
+  const addOption = () => {
+    if (options.length < 10) {
+      setOptions((opts) => [...opts, ""]);
+    }
+  };
+
   const removeOption = (idx: number) => {
     if (options.length > 2) {
       setOptions((opts) => opts.filter((_, i) => i !== idx));
     }
   };
 
+  const handleSubmit = async (formData: FormData) => {
+    setError(null);
+    setSuccess(false);
+    setIsSubmitting(true);
+
+    const res = await createPoll(formData);
+    
+    if (res?.error) {
+      setError(res.error);
+    } else {
+      setSuccess(true);
+      setTimeout(() => {
+        window.location.href = "/polls";
+      }, 1200);
+    }
+    
+    setIsSubmitting(false);
+  };
+
   return (
-    <form
-      action={async (formData) => {
-        setError(null);
-        setSuccess(false);
-        const res = await createPoll(formData);
-        if (res?.error) {
-          setError(res.error);
-        } else {
-          setSuccess(true);
-          setTimeout(() => {
-            window.location.href = "/polls";
-          }, 1200);
-        }
-      }}
-      className="space-y-6 max-w-md mx-auto"
-    >
-      <div>
-        <Label htmlFor="question">Poll Question</Label>
-        <Input name="question" id="question" required />
-      </div>
-      <div>
-        <Label>Options</Label>
-        {options.map((opt, idx) => (
-          <div key={idx} className="flex items-center gap-2 mb-2">
-            <Input
-              name="options"
-              value={opt}
-              onChange={(e) => handleOptionChange(idx, e.target.value)}
-              required
-            />
-            {options.length > 2 && (
-              <Button type="button" variant="destructive" onClick={() => removeOption(idx)}>
-                Remove
-              </Button>
-            )}
+    <div className="max-w-2xl mx-auto">
+      <form action={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="question">Poll Question</Label>
+          <Input 
+            name="question" 
+            id="question" 
+            placeholder="What would you like to ask?"
+            required 
+            className="text-lg"
+          />
+        </div>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>Options</Label>
+            <span className="text-sm text-slate-500">
+              {options.length}/10 options
+            </span>
           </div>
-        ))}
-        <Button type="button" onClick={addOption} variant="secondary">
-          Add Option
+          
+          {options.map((opt, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="text-sm text-slate-500 w-6">{idx + 1}.</span>
+              <Input
+                name="options"
+                value={opt}
+                onChange={(e) => handleOptionChange(idx, e.target.value)}
+                placeholder={`Option ${idx + 1}`}
+                required
+                className="flex-1"
+              />
+              {options.length > 2 && (
+                <Button 
+                  type="button" 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={() => removeOption(idx)}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          ))}
+          
+          {options.length < 10 && (
+            <Button 
+              type="button" 
+              onClick={addOption} 
+              variant="outline"
+              className="w-full"
+            >
+              + Add Option
+            </Button>
+          )}
+        </div>
+
+        {error && <ErrorDisplay error={error} />}
+        {success && <SuccessDisplay message="Poll created successfully! Redirecting..." />}
+        
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting}
+          size="lg"
+        >
+          {isSubmitting ? (
+            <div className="flex items-center gap-2">
+              <LoadingSpinner size="sm" />
+              Creating Poll...
+            </div>
+          ) : (
+            "Create Poll"
+          )}
         </Button>
-      </div>
-      {error && <div className="text-red-500">{error}</div>}
-      {success && <div className="text-green-600">Poll created! Redirecting...</div>}
-      <Button type="submit">Create Poll</Button>
-    </form>
+      </form>
+    </div>
   );
 } 
