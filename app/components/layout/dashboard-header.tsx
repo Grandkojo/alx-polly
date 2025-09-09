@@ -18,6 +18,16 @@ interface DashboardHeaderProps {
   onSignOut: () => void;
 }
 
+/**
+ * Responsive dashboard header with brand, primary navigation, create action, and user account menu.
+ *
+ * Renders a sticky top bar containing a link to the polls index, responsive navigation links ("My Polls", "Create Poll"),
+ * a primary "Create Poll" action, and a user avatar that opens an account dropdown with Profile, Settings, and Logout.
+ * The avatar and dropdown gracefully fall back when user data is missing (placeholder image and initial). Internal
+ * navigation uses Next.js Link components.
+ *
+ * @param onSignOut - Callback invoked when the user selects the "Logout" item in the account menu.
+ */
 export function DashboardHeader({ onSignOut }: DashboardHeaderProps) {
   const { user } = useAuth();
 

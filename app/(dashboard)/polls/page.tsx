@@ -4,6 +4,16 @@ import { getUserPolls } from '@/app/lib/actions/poll-actions';
 import PollActions from './PollActions';
 import { ErrorDisplay } from '@/app/components/ui/error-display';
 
+/**
+ * Server-rendered page that fetches and displays the current user's polls.
+ *
+ * Renders a header with a "Create New Poll" action, then fetches polls via
+ * getUserPolls(). If an error is returned it is shown using ErrorDisplay.
+ * When polls are present each poll is rendered with PollActions; when no polls
+ * exist a centered empty-state panel with a create button is shown.
+ *
+ * @returns A server-rendered React element for the user's polls page.
+ */
 export default async function PollsPage() {
   const { polls, error } = await getUserPolls();
 

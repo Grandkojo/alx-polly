@@ -1,3 +1,11 @@
+/**
+ * Dashboard footer displaying a copyright notice.
+ *
+ * Renders a semantic footer with a centered, small, muted copyright line that includes the current year
+ * (computed at render time) followed by "ALX Polly. All rights reserved."
+ *
+ * @returns The JSX element for the dashboard footer.
+ */
 export function DashboardFooter() {
   return (
     <footer className="border-t bg-white py-4">

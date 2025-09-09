@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { AuthForm, FormField } from '@/app/components/forms/auth-form';
 import { register } from '@/app/lib/actions/auth-actions';
 
+/**
+ * Registration page component that renders an AuthForm and handles user signup.
+ *
+ * Validates that the password and confirm-password fields match, invokes the async `register`
+ * action with the collected name/email/password, and sets an internal error message on failure.
+ * On successful registration it performs a full-page navigation to "/polls" to pick up the session.
+ *
+ * @returns The registration page React element.
+ */
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
 

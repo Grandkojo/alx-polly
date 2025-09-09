@@ -5,6 +5,15 @@ import Link from 'next/link';
 import { AuthForm, FormField } from '@/app/components/forms/auth-form';
 import { login } from '@/app/lib/actions/auth-actions';
 
+/**
+ * Login page component that renders an authentication form and handles user sign-in.
+ *
+ * Renders an AuthForm with email and password fields. On submit it reads `email` and `password`
+ * from the provided FormData, calls the `login` API, and displays any returned error. On successful
+ * authentication the page performs a full reload to `/polls` to pick up the new session.
+ *
+ * The form's error state is surfaced to the AuthForm via local component state.
+ */
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
