@@ -4,34 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { LoginFormData, RegisterFormData, ApiResponse } from '../types';
 
 /**
- * Authenticates a user with email and password credentials.
- * 
- * This function serves as the primary entry point for user authentication in the polling app.
- * It's critical for maintaining session state and ensuring only authenticated users can access
- * protected features like poll creation, voting, and dashboard management.
- * 
- * Security Context:
- * - Uses Supabase's built-in authentication which handles password hashing and session management
- * - Server-side execution prevents credential exposure to client-side code
- * - Returns generic error messages to prevent user enumeration attacks
- * 
- * Assumptions:
- * - User has already validated email/password format on client side
- * - Supabase client is properly configured with valid credentials
- * - User account exists and is not disabled
- * 
- * Edge Cases:
- * - Invalid credentials: Returns error without revealing if email exists
- * - Network failures: Supabase client handles retries and error states
- * - Account disabled: Supabase returns appropriate error message
- * 
- * Integration:
- * - Called from login form components in (auth) route group
- * - Success triggers middleware to redirect to dashboard
- * - Session state managed by Supabase SSR client
- * 
- * @param data - Login credentials containing email and password
- * @returns Promise resolving to error state (null on success, error message on failure)
+ * Authenticate a user using email and password via the server-side Supabase client.
+ *
+ * Attempts to sign in with the provided credentials and returns an ApiResponse indicating
+ * success (error: null) or failure (error: string). On unexpected failures the function
+ * returns a generic error message.
+ *
+ * @param data - Login credentials containing `email` and `password`
+ * @returns An ApiResponse where `error` is null on success or a string describing the failure
  */
 export async function login(data: LoginFormData): Promise<ApiResponse> {
   try {
@@ -54,37 +34,14 @@ export async function login(data: LoginFormData): Promise<ApiResponse> {
 }
 
 /**
- * Registers a new user account with email, password, and profile information.
- * 
- * This function creates new user accounts in the polling system, enabling users to participate
- * in poll creation, voting, and dashboard management. The registration process includes
- * profile metadata storage for personalized experiences.
- * 
- * Security Context:
- * - Supabase handles password strength validation and secure storage
- * - Email confirmation may be required based on Supabase configuration
- * - User metadata is stored securely and can be used for authorization decisions
- * 
- * Assumptions:
- * - Email is unique (Supabase enforces this constraint)
- * - Password meets minimum security requirements
- * - Name field is provided for user identification
- * - Supabase email confirmation is configured appropriately
- * 
- * Edge Cases:
- * - Duplicate email: Supabase returns specific error for email already exists
- * - Weak password: Supabase validates password strength and returns error
- * - Email confirmation required: User may need to verify email before full access
- * - Network issues: Registration may fail silently, requiring retry
- * 
- * Integration:
- * - Called from registration form in (auth) route group
- * - Success may require email verification before login
- * - User metadata becomes available for profile display and admin checks
- * - Triggers auth state change in AuthContext
- * 
- * @param data - Registration data containing email, password, and name
- * @returns Promise resolving to error state (null on success, error message on failure)
+ * Create a new user account using email, password, and a display name.
+ *
+ * Attempts to register the user with Supabase and stores `name` as user metadata.
+ * The function returns an ApiResponse with `error: null` on success or `error: string`
+ * containing the Supabase error message or a generic message for unexpected failures.
+ *
+ * @param data - Registration payload containing `email`, `password`, and `name`.
+ * @returns An ApiResponse: `error` is `null` on success or a descriptive error message on failure.
  */
 export async function register(data: RegisterFormData): Promise<ApiResponse> {
   try {

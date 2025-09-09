@@ -7,6 +7,15 @@ import { LoadingPage } from '@/app/components/ui/loading-spinner';
 import { AuthHeader } from '@/app/components/layout/auth-header';
 import { AuthFooter } from '@/app/components/layout/auth-footer';
 
+/**
+ * Layout wrapper for authentication pages.
+ *
+ * Renders an authentication layout (header, centered content, footer) for unauthenticated users,
+ * shows a loading screen while auth state is resolving, and redirects authenticated users to `/polls`.
+ *
+ * @param children - Content to render in the layout's main area when no authenticated user is present.
+ * @returns The layout JSX for authentication pages, or null while redirecting an authenticated user.
+ */
 export default function AuthLayout({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();

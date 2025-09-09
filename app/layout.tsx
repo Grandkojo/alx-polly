@@ -25,6 +25,13 @@ export const metadata: Metadata = {
   },
 };
 
+/**
+ * Root HTML layout for the application.
+ *
+ * Renders the document root with language set to English, applies global font CSS variables and antialiasing, and wraps page content with the authentication provider so child components can access auth context.
+ *
+ * @param children - The React nodes to render inside the layout (page content).
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

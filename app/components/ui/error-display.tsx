@@ -7,6 +7,16 @@ interface ErrorDisplayProps {
   variant?: "default" | "destructive" | "warning";
 }
 
+/**
+ * Renders a small, styled inline error notification with an icon and message.
+ *
+ * Supports three visual variants: `"default"`, `"destructive"` (red, used by default), and `"warning"` (yellow).
+ *
+ * @param error - The message text to display.
+ * @param className - Optional additional class names to merge with the component's base styles.
+ * @param variant - Visual variant to apply; defaults to `"destructive"`.
+ * @returns A JSX element containing an icon and the provided error text.
+ */
 export function ErrorDisplay({ 
   error, 
   className, 
@@ -37,6 +47,13 @@ interface SuccessDisplayProps {
   className?: string;
 }
 
+/**
+ * Renders a compact success notification with a green indicator and message.
+ *
+ * @param message - The text to display inside the success notification.
+ * @param className - Optional additional CSS classes merged into the component container.
+ * @returns A JSX element containing the success display.
+ */
 export function SuccessDisplay({ message, className }: SuccessDisplayProps) {
   return (
     <div

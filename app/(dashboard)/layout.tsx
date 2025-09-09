@@ -8,46 +8,16 @@ import { DashboardHeader } from "@/app/components/layout/dashboard-header";
 import { DashboardFooter } from "@/app/components/layout/dashboard-footer";
 
 /**
- * Dashboard layout component that provides authenticated user interface.
- * 
- * This component serves as the main layout wrapper for all authenticated
- * dashboard pages, providing navigation, user menu, and authentication
- * state management. It ensures only authenticated users can access
- * protected dashboard content.
- * 
- * Key Responsibilities:
- * - Provide consistent navigation and branding across dashboard pages
- * - Display user authentication status and profile information
- * - Handle automatic redirects for unauthenticated users
- * - Provide logout functionality and user menu
- * - Manage loading states during authentication checks
- * 
- * Security Context:
- * - Automatically redirects unauthenticated users to login page
- * - Displays user-specific information only when authenticated
- * - Handles authentication state changes gracefully
- * - Provides secure logout functionality
- * 
- * Assumptions:
- * - AuthContext is properly configured and provides user state
- * - Router is available for navigation operations
- * - User has valid session data when authenticated
- * - All child components require authentication
- * 
- * Edge Cases:
- * - Loading state: Shows loading spinner while checking auth
- * - Unauthenticated user: Redirects to login page
- * - Session expiration: Handles gracefully with redirect
- * - Network issues: Auth context handles retries
- * 
- * Integration:
- * - Wraps all dashboard route pages
- * - Uses AuthContext for user state management
- * - Provides navigation to polls, create poll, and admin pages
- * - Enables user profile management and logout
- * 
- * @param children - React components to render within the dashboard layout
- * @returns JSX element with dashboard layout and authentication handling
+ * Layout wrapper for authenticated dashboard pages.
+ *
+ * Ensures only authenticated users can access its children by showing a loading
+ * state while auth is resolving and redirecting to "/login" when unauthenticated.
+ * When authenticated, renders the dashboard chrome (header and footer) and the
+ * provided page content. Exposes a built-in sign-out flow that terminates the
+ * session and navigates to the login page.
+ *
+ * @param children - Page content to render inside the authenticated dashboard layout
+ * @returns The dashboard layout JSX element for authenticated users, or null/LoadingPage while resolving auth
  */
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, signOut, loading } = useAuth();

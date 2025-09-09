@@ -20,6 +20,23 @@ interface AuthFormProps {
   error?: string | null;
 }
 
+/**
+ * Reusable authentication form wrapper that renders a card with header, content (form), and footer.
+ *
+ * The form collects form values into a FormData and calls `onSubmit(formData)`. While the submission
+ * promise is pending an internal `isSubmitting` state disables the submit button and replaces its
+ * label with a small loading spinner and "Processing...". The submit button is also disabled when
+ * `isLoading` is true. If `error` is provided an ErrorDisplay is rendered above the submit button.
+ *
+ * Note: `isSubmitting` is set to true before calling `onSubmit` and set back to false after the
+ * awaited call resolves. If `onSubmit` rejects, `isSubmitting` will remain true because there is
+ * no error handling inside the component.
+ *
+ * @param onSubmit - Async handler invoked with the form's FormData on submit; should return a Promise<void>.
+ * @param isLoading - When true, disables the submit button (used for external loading state).
+ * @param error - Optional error message to display inside the form.
+ * @returns A React element containing the complete auth form UI.
+ */
 export function AuthForm({
   title,
   description,
@@ -90,6 +107,20 @@ interface FormFieldProps {
   autoComplete?: string;
 }
 
+/**
+ * A labeled text input wrapper used in auth forms.
+ *
+ * Renders a label tied to an input and an Input element configured by the provided props.
+ *
+ * @param id - The input's id; also used for the label's htmlFor.
+ * @param name - The input's name attribute (form key).
+ * @param label - Visible label text for the input.
+ * @param type - Input type (defaults to `"text"`).
+ * @param placeholder - Optional placeholder shown inside the input.
+ * @param required - Whether the input is required (defaults to `false`).
+ * @param autoComplete - Optional autocomplete attribute value for the browser.
+ * @returns A React element containing the label and input.
+ */
 export function FormField({
   id,
   name,

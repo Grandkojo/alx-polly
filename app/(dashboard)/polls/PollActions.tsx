@@ -9,53 +9,15 @@ import { ErrorDisplay } from "@/app/components/ui/error-display";
 import { useState } from "react";
 
 /**
- * Poll actions component providing poll management interface for poll owners.
- * 
- * This component displays individual poll cards with management actions,
- * enabling poll owners to view, edit, and delete their polls. It implements
- * ownership-based authorization to ensure only poll owners can perform
- * management actions on their polls.
- * 
- * Key Responsibilities:
- * - Display poll information in an accessible card format
- * - Provide navigation to poll detail and edit pages
- * - Enable poll deletion with confirmation
- * - Implement ownership-based action visibility
- * - Handle poll management workflows
- * 
- * Security Context:
- * - Only displays management actions to poll owners
- * - Uses client-side ownership verification for UI state
- * - Server-side actions enforce additional authorization
- * - Provides confirmation dialogs for destructive actions
- * 
- * Business Logic:
- * - Shows poll question and option count
- * - Provides edit and delete actions for poll owners
- * - Handles poll deletion with user confirmation
- * - Refreshes page after successful deletion
- * - Maintains consistent UI state across actions
- * 
- * Assumptions:
- * - Poll data includes all required fields (id, question, options, user_id)
- * - Current user context is available and accurate
- * - Poll ownership is determined by user_id comparison
- * - Delete action requires user confirmation
- * 
- * Edge Cases:
- * - Poll owner mismatch: Actions are hidden (secure by default)
- * - Deletion failure: Error handling in delete action
- * - Network issues: Actions may fail gracefully
- * - User context changes: Actions update accordingly
- * 
- * Integration:
- * - Used in polls dashboard to display user's polls
- * - Integrates with poll management actions (edit, delete)
- * - Provides navigation to poll detail and edit pages
- * - Enables poll lifecycle management workflows
- * 
- * @param poll - Poll object containing poll data and metadata
- * @returns JSX element with poll card and management actions
+ * Render a poll card with owner-only management actions (view, edit, delete).
+ *
+ * Displays the poll question and option count and, when the current user is
+ * the poll owner, shows Edit and Delete controls. Delete prompts for
+ * confirmation, displays any server-side error, disables while in progress,
+ * and reloads the page on success.
+ *
+ * @param poll - The poll to render (expects `id`, `question`, `options`, and `user_id`)
+ * @returns A JSX element representing the poll card and owner actions
  */
 export default function PollActions({ poll }: PollActionsProps) {
   const { user } = useAuth();

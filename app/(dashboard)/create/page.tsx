@@ -1,5 +1,12 @@
 import PollCreateForm from "./PollCreateForm";
 
+/**
+ * Page component that renders the "Create a New Poll" header and the poll creation form.
+ *
+ * Renders a centered title and subtitle, followed by the PollCreateForm component.
+ *
+ * @returns The JSX element for the create-poll page.
+ */
 export default function CreatePollPage() {
   return (
     <div className="space-y-6">

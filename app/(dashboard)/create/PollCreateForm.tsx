@@ -9,55 +9,18 @@ import { ErrorDisplay, SuccessDisplay } from "@/app/components/ui/error-display"
 import { LoadingSpinner } from "@/app/components/ui/loading-spinner";
 
 /**
- * Poll creation form component enabling authenticated users to create new polls.
- * 
- * This component provides a comprehensive interface for poll creation, including
- * dynamic option management, input validation, and user feedback. It handles
- * the complete poll creation workflow from form input to successful submission
- * and redirect to the polls dashboard.
- * 
- * Key Responsibilities:
- * - Provide form interface for poll question and options input
- * - Enable dynamic addition and removal of poll options
- * - Handle form submission with validation and error handling
- * - Provide user feedback during creation process
- * - Manage form state and option management
- * 
- * Security Context:
- * - Requires user authentication for poll creation
- * - Validates and sanitizes all form input data
- * - Enforces minimum and maximum option limits
- * - Prevents submission of invalid or empty data
- * - Handles server-side validation errors gracefully
- * 
- * Business Logic:
- * - Minimum 2 options required, maximum 10 options allowed
- * - Dynamic option management with add/remove functionality
- * - Form validation with real-time error display
- * - Success feedback with automatic redirect
- * - Consistent error handling and user feedback
- * 
- * Assumptions:
- * - User is authenticated and can create polls
- * - Form data will be validated server-side
- * - Poll creation action handles all validation
- * - User expects immediate feedback on form actions
- * - Successful creation should redirect to polls dashboard
- * 
- * Edge Cases:
- * - Invalid form data: Shows validation errors
- * - Server errors: Displays error messages to user
- * - Network issues: Handles gracefully with error feedback
- * - Empty options: Prevents submission and shows error
- * - Too many options: Enforces maximum limit
- * 
- * Integration:
- * - Used in create poll page for poll creation workflow
- * - Integrates with poll actions for data submission
- * - Provides data for poll management and display
- * - Enables poll creation and immediate access to polls
- * 
- * @returns JSX element with poll creation form and option management
+ * Renders a poll creation form for authenticated users with dynamic option management and client-side submission.
+ *
+ * The form maintains local state for poll options, submission status, and feedback. It enforces a minimum of
+ * 2 and a maximum of 10 options, prevents removing options below the minimum, and allows adding options up to the maximum.
+ * On submit it calls `createPoll` with the form data, displays server-side errors when present, shows a success message
+ * on success, and redirects the user to "/polls" after a short delay.
+ *
+ * Behavior notes:
+ * - Each option and the question input are required.
+ * - While submitting, the submit button is disabled and a loading indicator is shown.
+ *
+ * @returns JSX element containing the poll creation form.
  */
 export default function PollCreateForm() {
   const [options, setOptions] = useState(["", ""]);
