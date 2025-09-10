@@ -45,7 +45,10 @@ import { validatePollQuestion, validatePollOptions, validatePollId, validateOpti
  * @param formData - Form data containing question and options from create poll form
  * @returns Promise resolving to error state (null on success, error message on failure)
  */
-export async function createPoll(formData: FormData) {
+export async function createPoll(
+  prevState: { error: string | null, success: boolean },
+  formData: FormData,
+) {
   const supabase = await createClient();
 
   const question = formData.get("question") as string;
@@ -54,13 +57,13 @@ export async function createPoll(formData: FormData) {
   // Validate question content and length
   const questionValidation = validatePollQuestion(question);
   if (!questionValidation.isValid) {
-    return { error: questionValidation.error };
+    return { error: questionValidation.error, success: false };
   }
 
   // Validate options array and content
   const optionsValidation = validatePollOptions(options);
   if (!optionsValidation.isValid) {
-    return { error: optionsValidation.error };
+    return { error: optionsValidation.error, success: false };
   }
 
   // Verify user authentication for poll creation
@@ -69,10 +72,10 @@ export async function createPoll(formData: FormData) {
     error: userError,
   } = await supabase.auth.getUser();
   if (userError) {
-    return { error: userError.message };
+    return { error: userError.message, success: false };
   }
   if (!user) {
-    return { error: "You must be logged in to create a poll." };
+    return { error: "You must be logged in to create a poll.", success: false };
   }
 
   // Insert validated poll data into database
@@ -85,12 +88,12 @@ export async function createPoll(formData: FormData) {
   ]);
 
   if (error) {
-    return { error: error.message };
+    return { error: error.message, success: false };
   }
 
   // Refresh polls cache to show new poll immediately
   revalidatePath("/polls");
-  return { error: null };
+  return { error: null, success: true };
 }
 
 /**
@@ -454,7 +457,6 @@ export async function submitVote(pollId: string, optionIndex: number) {
  * @param id - Unique identifier of the poll to delete
  * @returns Promise resolving to error state (null on success, error message on failure)
  */
-"use server";
 export async function deletePoll(id: string) {
   const supabase = await createClient();
   
