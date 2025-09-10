@@ -1,20 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/lib/context/auth-context";
 import { Button } from "@/components/ui/button";
 import { deletePoll } from "@/app/lib/actions/poll-actions";
-
-interface Poll {
-  id: string;
-  question: string;
-  options: any[];
-  user_id: string;
-}
-
-interface PollActionsProps {
-  poll: Poll;
-}
+import { Poll, PollActionsProps } from "@/app/lib/types";
+import { ErrorDisplay } from "@/app/components/ui/error-display";
+import { useState } from "react";
 
 /**
  * Poll actions component providing poll management interface for poll owners.
@@ -67,10 +60,28 @@ interface PollActionsProps {
  */
 export default function PollActions({ poll }: PollActionsProps) {
   const { user } = useAuth();
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const handleDelete = async () => {
-    if (confirm("Are you sure you want to delete this poll?")) {
-      await deletePoll(poll.id);
-      window.location.reload();
+    if (confirm("Are you sure you want to delete this poll? This action cannot be undone.")) {
+      setIsDeleting(true);
+      setError(null);
+      
+      try {
+        const result = await deletePoll(poll.id);
+        
+        if (result?.error) {
+          setError(result.error);
+          setIsDeleting(false);
+        } else {
+          router.refresh();
+        }
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'An unexpected error occurred');
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -89,13 +100,21 @@ export default function PollActions({ poll }: PollActionsProps) {
         </div>
       </Link>
       {user && user.id === poll.user_id && (
-        <div className="flex gap-2 p-2">
-          <Button asChild variant="outline" size="sm">
-            <Link href={`/polls/${poll.id}/edit`}>Edit</Link>
-          </Button>
-          <Button variant="destructive" size="sm" onClick={handleDelete}>
-            Delete
-          </Button>
+        <div className="p-2 space-y-2">
+          {error && <ErrorDisplay error={error} />}
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/polls/${poll.id}/edit`}>Edit</Link>
+            </Button>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
         </div>
       )}
     </div>

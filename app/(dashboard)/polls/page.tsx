@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { getUserPolls } from '@/app/lib/actions/poll-actions';
-import PollActions from './PollActions'; 
+import PollActions from './PollActions';
+import { ErrorDisplay } from '@/app/components/ui/error-display';
 
 export default async function PollsPage() {
   const { polls, error } = await getUserPolls();
@@ -14,6 +15,9 @@ export default async function PollsPage() {
           <Link href="/create">Create New Poll</Link>
         </Button>
       </div>
+      
+      {error && <ErrorDisplay error={error} />}
+      
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {polls && polls.length > 0 ? (
           polls.map((poll) => <PollActions key={poll.id} poll={poll} />)
@@ -27,7 +31,6 @@ export default async function PollsPage() {
           </div>
         )}
       </div>
-      {error && <div className="text-red-500">{error}</div>}
     </div>
   );
 }
